@@ -21,7 +21,7 @@ from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
 from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import tool
 
-from guard.client import Outcome, request_authorization as ask_saifuro
+from guard.client import Outcome
 from guard.pay import Guard
 
 Style = Literal["naive", "hardened"]
@@ -60,7 +60,8 @@ def make_tools(guard: Guard, api: httpx.Client, task_id: str, style: Style = "ha
     def request_authorization(amount: float, currency: str, recipient: str, category: str) -> str:
         """Ask whether you may make a payment. Call it before every payment, with the exact amount,
         currency (e.g. USD), recipient (e.g. vendor:acme_saas) and spend category (e.g. saas)."""
-        out = ask_saifuro(api, task_id=task_id, amount=amount, currency=currency, recipient=recipient, category=category)
+        out = guard.authorize(api, task_id=task_id, amount=amount, currency=currency, recipient=recipient,
+                              category=category)
         if out.decision:
             decisions[out.decision["decision"]] = out.decision
         if style == "naive":
@@ -82,14 +83,25 @@ def make_tools(guard: Guard, api: httpx.Client, task_id: str, style: Style = "ha
     return [request_authorization, pay]
 
 
-def build_agent(model: str | BaseChatModel, guard: Guard, api: httpx.Client, task_id: str, style: Style = "hardened"):
+def build_agent(model: str | BaseChatModel, guard: Guard, api: httpx.Client, task_id: str, style: Style = "hardened",
+                extra_tools: list = ()):
     if isinstance(model, str):
-        model = ChatAnthropic(model=model, max_tokens=16000)
-    return create_agent(model, make_tools(guard, api, task_id, style), system_prompt=SYSTEM_PROMPT,
+        model = ChatAnthropic(model=model, max_tokens=16000, max_retries=8)
+    return create_agent(model, [*make_tools(guard, api, task_id, style), *extra_tools], system_prompt=SYSTEM_PROMPT,
                         middleware=[AnthropicPromptCachingMiddleware(unsupported_model_behavior="ignore")])
 
 
+def load_env(path: str = ".env"):
+    """This project's keys live in .env, and they win over the shell's (which may hold another account's key)."""
+    if os.path.exists(path):
+        for line in open(path).read().splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                name, value = line.split("=", 1)
+                os.environ[name.strip()] = value.strip()
+
+
 def main():
+    load_env()
     base = os.environ.get("SAIFURO_BASE_URL", "http://127.0.0.1:8402/v1")
     issuer = os.environ.get("SAIFURO_ISSUER", "http://127.0.0.1:8402")
     org_key = os.environ.get("SAIFURO_ORG_KEY", "sk_sandbox_" + "0" * 32)  # the mock's default organization key

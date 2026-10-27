@@ -14,3 +14,4 @@ reference/*
 !reference/jwks-snapshot-2026-10-27.json
 docs/learning-guide.md
 learning-journal.md
+payments.jsonl

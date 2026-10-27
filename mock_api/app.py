@@ -13,6 +13,7 @@ import json
 import os
 import secrets
 import time
+from contextvars import ContextVar
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Annotated, Literal
@@ -37,8 +38,13 @@ VELOCITY_LIMIT, VELOCITY_WINDOW = 10, 60  # fixed in the engine, not configurabl
 DAY = 86400
 
 
+# MOCK ONLY: a request header X-Mock-Clock-Offset: -600 makes the mock decide that request as if
+# 10 minutes ago, so the evals can hand an agent an allow that has already expired.
+clock_offset: ContextVar[float] = ContextVar("clock_offset", default=0.0)
+
+
 def now() -> float:  # tests monkeypatch this
-    return time.time()
+    return time.time() + clock_offset.get()
 
 
 def iso(t: float) -> str:
@@ -91,6 +97,7 @@ async def on_http_error(request: Request, e: HTTPException):
 @app.middleware("http")
 async def api_middleware(request: Request, call_next):
     request.state.request_id = "req_" + secrets.token_hex(16)
+    clock_offset.set(float(request.headers.get("x-mock-clock-offset", 0)))
     response = await handle(request, call_next)
     response.headers["X-Request-Id"] = request.state.request_id
     return response

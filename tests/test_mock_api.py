@@ -128,3 +128,10 @@ def test_error_envelope(api, agent):
                    json={"amount": "340", "currency": "USD", "recipient": "vendor:x", "category": "saas"})
     assert bad.status_code == 400 and bad.json()["error"]["code"] == "invalid_request"
     assert api.get("/v1/decisions/dec_nope", headers=headers).status_code == 404
+
+
+def test_mock_clock_offset_header(api, agent):
+    headers, *_ = agent
+    d = ask(api, headers, 120, **{"X-Mock-Clock-Offset": "-600"}).json()  # mock only
+    issued = mock.datetime.fromisoformat(d["issued_at"]).timestamp()
+    assert abs(issued - (mock.time.time() - 600)) < 5

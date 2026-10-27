@@ -22,11 +22,6 @@ class Outcome:
     message: str  # the code and reason in plain words, for the agent
 
 
-# Every verdict seen per recipient, oldest first. pay() reads it for denial memory.
-# ponytail: in-process; a shared store once the guard runs in more than one process
-verdicts_by_recipient: dict[str, list[str]] = {}
-
-
 def make_client(timeout: float = 10.0) -> httpx.Client:
     return httpx.Client(
         base_url=os.environ.get("SAIFURO_BASE_URL", "http://127.0.0.1:8402/v1"),
@@ -67,6 +62,5 @@ def request_authorization(client: httpx.Client, *, task_id: str, amount: float, 
             # so a retry of this retry still replays instead of creating a third decision.
             key = hashlib.sha256((key + d["decision"]).encode()).hexdigest()
             continue
-        verdicts_by_recipient.setdefault(recipient, []).append(verdict)
         return Outcome(d, f"{verdict}: {reason}")
     return no_verdict("Saifuro kept replaying expired decisions")

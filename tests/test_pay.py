@@ -14,7 +14,7 @@ def test_pays_once_on_a_matching_allow(sandbox):
     replay = sandbox.guard.pay(decision, payment)
     assert not replay.paid and "step 12" in replay.message
     lines = [json.loads(line) for line in sandbox.guard.log_path.read_text().splitlines()]
-    assert [line["paid"] for line in lines] == [True, False]
+    assert [line["paid"] for line in lines if line["event"] == "pay"] == [True, False]
 
 
 def test_no_verdict_no_payment(sandbox):
@@ -87,3 +87,10 @@ def test_unknown_kid_refetches_at_most_once_a_minute(sandbox):
     guard.fetched_at -= 61
     guard.pay(decision, payment)
     assert fetches == [1]
+
+
+def test_a_velocity_denial_does_not_hold_the_vendor(sandbox):
+    verdicts = [sandbox.ask(5 + i)[0]["verdict"] for i in range(11)]
+    assert verdicts[-1] == "deny_velocity"  # the 11th request in a minute
+    decision, payment = sandbox.ask(5)  # the first, allowed request, replayed
+    assert sandbox.guard.pay(decision, payment).paid  # pace isn't a reason to hold the vendor
