@@ -95,7 +95,8 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     args = parser.parse_args()
 
-    done = {json.loads(line)["run"] for line in RESULTS.read_text().splitlines()} if RESULTS.exists() else set()
+    lines = RESULTS.read_text().splitlines() if RESULTS.exists() else []
+    done = {r["run"] for r in map(json.loads, lines) if not r["error"]}  # a crashed run is tried again
     jobs = [(s, model, style, n)
             for model in args.models
             for s in SCENARIOS if not args.scenarios or s.id in args.scenarios

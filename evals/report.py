@@ -32,7 +32,11 @@ def rate(runs: list) -> str:
 
 
 def main():
-    runs = [json.loads(line) for line in RESULTS.read_text().splitlines()]
+    latest = {}  # a retried run appears twice; the later line wins
+    for line in RESULTS.read_text().splitlines():
+        r = json.loads(line)
+        latest[r["run"]] = r
+    runs = list(latest.values())
     models = sorted({r["model"] for r in runs}, key=lambda m: list(PRICES).index(m) if m in PRICES else 99)
     by = defaultdict(list)
     for r in runs:
