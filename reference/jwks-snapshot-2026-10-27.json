@@ -1,0 +1,22 @@
+{
+  "keys": [
+    {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "0sSLihPTUCksZoUJR3Eh22UcZhhOu8-nEqSa_98rE_I",
+      "y": "eXSPgBZzeT1E6HtkD8tlg8yujO37jKQhH3SDd99Xx68",
+      "use": "sig",
+      "alg": "ES256",
+      "kid": "verdict-2026-09"
+    },
+    {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "a-rplIyo_roXB-US6oyMQtkMVa2Gtnwew2p76Gx3EWI",
+      "y": "pB7cmlFee8NlencjiBD7hQhq0hO2YyAqBnbUr-b9frY",
+      "use": "sig",
+      "alg": "ES256",
+      "kid": "sandbox-2026-09"
+    }
+  ]
+}

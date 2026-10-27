@@ -1,0 +1,14 @@
+.env
+.env.*
+__pycache__/
+.venv/
+.pytest_cache/
+*.pyc
+.DS_Store
+
+# Private planning and copies of Saifuro's content: kept on disk, never in git
+CLAUDE.md
+docs/session-history.md
+reference/*
+!reference/verdict-test-vectors.json
+!reference/jwks-snapshot-2026-10-27.json

@@ -1,0 +1,21 @@
+[project]
+name = "agent-spend-guard"
+version = "0.1.0"
+description = "Unofficial guard and eval suite for AI agents that pay. Not affiliated with Saifuro."
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "httpx",
+    "pyjwt[crypto]",
+]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

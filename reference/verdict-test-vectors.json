@@ -1,0 +1,3876 @@
+{
+ "title": "Test vectors for draft-dias-agent-payment-verdicts-00",
+ "warning": "TEST ONLY. Every signature in these vectors is made with, or derived from, the keys in testKeys, which include the example key of Appendix A of the draft and are published so that anyone can reproduce and extend the vectors. The issuers are the reserved example domains https://issuer.example and https://issuer-b.example. Nothing signed with them proves anything. Never configure these keys or key sets in a verifier that protects real payments.",
+ "conventions": {
+  "clockSkewSeconds": 60,
+  "issuers": "Map from each accepted issuer identifier to the name of its key set in keySets. A kid that is absent from the set stays absent after the one refetch of step 4.",
+  "now": "The verifier's clock, Unix seconds.",
+  "mode": "\"settle\": Section 6, all twelve steps. \"record\": Section 6.2, checking a stored verdict.",
+  "payment": "Settle mode: the relying party's payment record after any conversion of Section 4.3: amount in the agreed unit (major units), as a decimal string; currency code in the form the issuer uses.",
+  "agreedMandates": "Settle mode: mandate identifiers the operator has agreed with the relying party (step 8), for every issuer in issuers. Every settle-mode vector is a payment that draws on that operator's funds, so the mandate check of step 8 always applies.",
+  "seenNonces": "Settle mode: pairs [iss, nonce] of verdicts already accepted (step 12).",
+  "seenJtis": "Settle mode: pairs [iss, jti] of the same accepted verdicts, for a verifier that records jti instead of nonce (step 12). Use whichever your verifier records.",
+  "seenSupersedes": "Settle mode: pairs [iss, supersedes] already accepted (Section 10.12).",
+  "testingOnly": "Settle mode: whether the verifier is used only for testing (step 3).",
+  "receivedAt": "Record mode: when the verdict was received, Unix seconds, or null if not recorded.",
+  "distinguishTest": "Record mode: whether the checking party applies step 3.",
+  "refetchWouldReturn": "Record mode, where present: the key set a refetch from the issuer would return now. A record checker MUST NOT refetch (Section 6.2); the field lets a test detect one that does.",
+  "audience": "The verifier's own identifier for the aud rule of step 6, or null.",
+  "nestingDepth": "Every vector assumes a JSON nesting-depth bound (step 1) of at least 4.",
+  "expected": "The expected results assume that every SHOULD-level rejection of Section 6 and Section 10.12 is applied; notes name the vectors that depend on one. valid MUST match. step is the first step of Section 6, in the document's order, that rejects the token; a verifier that runs the steps in another order, as Section 6 permits, can report a different step. note gives known alternatives."
+ },
+ "testKeys": [
+  {
+   "kty": "EC",
+   "crv": "P-256",
+   "x": "50tYIab3ytEcPnb_fuZCPc4cM87aNhpYhOYb9LmSseA",
+   "y": "iZho4NBfqRZnM7AgedlHkvEMRU030NPOYGoTv7s2Ls0",
+   "d": "34KI9Rx04_gEp_Ljm4-dGFq7O75vEFednnvRwcDdvUc",
+   "use": "sig",
+   "alg": "ES256",
+   "kid": "example-1",
+   "purpose": "The example key of Appendix A of the draft; in the key set of https://issuer.example."
+  },
+  {
+   "kty": "EC",
+   "crv": "P-256",
+   "x": "NZunYvriMPdjTb-ofzT7TNPcc6tn281_omp0GEwrJHY",
+   "y": "3To354Zyd7FZQkQXDAYylTw9pVwXHrnLUfxYfIjwoQI",
+   "d": "ULBE6DdmLQsIvEvPzAniiKaM-qWY7ERu0JCFcuofrEU",
+   "use": "sig",
+   "alg": "ES256",
+   "kid": "sandbox-example-1",
+   "purpose": "A test-environment key of https://issuer.example (kid prefix \"sandbox-\", Section 5.3)."
+  },
+  {
+   "kty": "EC",
+   "crv": "P-256",
+   "x": "Ww5lHpQEwrBCU0pU4QjBsEZ6mx6-77_gNKG3sJvuCXk",
+   "y": "N0uWvY0IvNSl6X32Dx4fU7wPROSvzhL9oYiI7ZbxI2Y",
+   "d": "OF4AW1nd4cL39xvHo3QV_YYzBhl-VGVikQrVATaq2bE",
+   "use": "sig",
+   "alg": "ES256",
+   "kid": "example-2",
+   "purpose": "A key whose kid is in no key set (unknown kid), also used to sign under another key's kid."
+  },
+  {
+   "kty": "EC",
+   "crv": "P-256",
+   "x": "4RBiyKn3egzPm5a_KyyPXq2GmnowgBNEI2cVSXMCaCc",
+   "y": "SWKyRbbv4wBilEywcoOqetCpjlPLqjDZ0FiQi01hLlM",
+   "d": "MW1i-ayO1YLLR6cZFcO4UOSJ13ogHwloax-nWF4N3rU",
+   "use": "sig",
+   "alg": "ES256",
+   "kid": "b-1",
+   "purpose": "The key of a second issuer, https://issuer-b.example."
+  },
+  {
+   "kty": "EC",
+   "crv": "P-256",
+   "x": "PZizodJBiswWS9G8ybB7ztv-hHPjn16DdqheM8whZho",
+   "y": "qkuw7l5sIM3Uqn9gC44c12O4fvoPs4qWHO8g3HO5ejE",
+   "d": "XqFVu_sR3yrDlrXyk9YLBMQHfe5hYthIqGcaoxl7zKg",
+   "use": "sig",
+   "alg": "ES256",
+   "kid": "attacker",
+   "purpose": "A key carried in a token header (jwk) or behind jku/x5u; in no configured key set."
+  },
+  {
+   "kty": "EC",
+   "crv": "P-384",
+   "x": "orDMCAQfLvvnO-Fnpve5jSOroX4vktU49gFSdt7UwxzPCgPCJ39mbVtWfLH8ltEb",
+   "y": "_M7EJQeugsxc4DVlsMositQ65NUqcAhBfy3WKj-mOwk8BCf0z33SxgV5pKDkjhc_",
+   "d": "okg-u0om68Y_hvAIG57L_hl4akMDryroToyUpnHdZn8Z2GoJQsXX5zmgsvl1ttjo",
+   "use": "sig",
+   "alg": "ES384",
+   "kid": "p384",
+   "purpose": "A P-384 key, used for a key-set entry with the wrong curve."
+  }
+ ],
+ "keySets": {
+  "issuer": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "50tYIab3ytEcPnb_fuZCPc4cM87aNhpYhOYb9LmSseA",
+     "y": "iZho4NBfqRZnM7AgedlHkvEMRU030NPOYGoTv7s2Ls0",
+     "use": "sig",
+     "alg": "ES256",
+     "kid": "example-1"
+    },
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "NZunYvriMPdjTb-ofzT7TNPcc6tn281_omp0GEwrJHY",
+     "y": "3To354Zyd7FZQkQXDAYylTw9pVwXHrnLUfxYfIjwoQI",
+     "use": "sig",
+     "alg": "ES256",
+     "kid": "sandbox-example-1"
+    }
+   ]
+  },
+  "issuer-b": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "4RBiyKn3egzPm5a_KyyPXq2GmnowgBNEI2cVSXMCaCc",
+     "y": "SWKyRbbv4wBilEywcoOqetCpjlPLqjDZ0FiQi01hLlM",
+     "use": "sig",
+     "alg": "ES256",
+     "kid": "b-1"
+    }
+   ]
+  },
+  "issuer-duplicate-kid": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "50tYIab3ytEcPnb_fuZCPc4cM87aNhpYhOYb9LmSseA",
+     "y": "iZho4NBfqRZnM7AgedlHkvEMRU030NPOYGoTv7s2Ls0",
+     "use": "sig",
+     "alg": "ES256",
+     "kid": "example-1"
+    },
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "Ww5lHpQEwrBCU0pU4QjBsEZ6mx6-77_gNKG3sJvuCXk",
+     "y": "N0uWvY0IvNSl6X32Dx4fU7wPROSvzhL9oYiI7ZbxI2Y",
+     "use": "sig",
+     "alg": "ES256",
+     "kid": "example-1"
+    }
+   ]
+  },
+  "issuer-key-alg-es384": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "50tYIab3ytEcPnb_fuZCPc4cM87aNhpYhOYb9LmSseA",
+     "y": "iZho4NBfqRZnM7AgedlHkvEMRU030NPOYGoTv7s2Ls0",
+     "use": "sig",
+     "alg": "ES384",
+     "kid": "example-1"
+    }
+   ]
+  },
+  "issuer-key-use-enc": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "50tYIab3ytEcPnb_fuZCPc4cM87aNhpYhOYb9LmSseA",
+     "y": "iZho4NBfqRZnM7AgedlHkvEMRU030NPOYGoTv7s2Ls0",
+     "use": "enc",
+     "alg": "ES256",
+     "kid": "example-1"
+    }
+   ]
+  },
+  "issuer-key-crv-p384": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-384",
+     "x": "orDMCAQfLvvnO-Fnpve5jSOroX4vktU49gFSdt7UwxzPCgPCJ39mbVtWfLH8ltEb",
+     "y": "_M7EJQeugsxc4DVlsMositQ65NUqcAhBfy3WKj-mOwk8BCf0z33SxgV5pKDkjhc_",
+     "use": "sig",
+     "alg": "ES256",
+     "kid": "example-1"
+    }
+   ]
+  },
+  "issuer-stored-copy-without-example-1": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "NZunYvriMPdjTb-ofzT7TNPcc6tn281_omp0GEwrJHY",
+     "y": "3To354Zyd7FZQkQXDAYylTw9pVwXHrnLUfxYfIjwoQI",
+     "use": "sig",
+     "alg": "ES256",
+     "kid": "sandbox-example-1"
+    }
+   ]
+  },
+  "issuer-key-minimal": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "50tYIab3ytEcPnb_fuZCPc4cM87aNhpYhOYb9LmSseA",
+     "y": "iZho4NBfqRZnM7AgedlHkvEMRU030NPOYGoTv7s2Ls0",
+     "kid": "example-1"
+    }
+   ]
+  },
+  "issuer-key-off-curve": {
+   "keys": [
+    {
+     "kty": "EC",
+     "crv": "P-256",
+     "x": "50tYIab3ytEcPnb_fuZCPc4cM87aNhpYhOYb9LmSseA",
+     "y": "iZho4NBfqRZnM7AgedlHkvEMRU030NPOYGoTv7s2Ls4",
+     "use": "sig",
+     "alg": "ES256",
+     "kid": "example-1"
+    }
+   ]
+  }
+ },
+ "vectors": [
+  {
+   "id": "appendix-a",
+   "description": "The token of Appendix A.2, checked as Appendix A.3 describes.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzViMmU5YzQxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fOWQwMmM2ZTQxYTdmM2I4NSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.5NLM85wfRPdBIBaW_fY_gmgfml5w-0KZlVbDj0YUVxa03wiYmqXamfLynH_S_DUkk2j_HTAlorcS3tHdtNvwYA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "appendix-a-low-s-twin",
+   "description": "The Appendix A token with S replaced by n - S. Both signatures are valid (step 5 forbids requiring low S); the claims, and so the nonce, are the same.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzViMmU5YzQxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fOWQwMmM2ZTQxYTdmM2I4NSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.5NLM85wfRPdBIBaW_fY_gmgfml5w-0KZlVbDj0YUVxZLIPdmZVolZw0NY4AtA8rbKX37kHbx-83g2vjlR4c08Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "allow-decimal-equal",
+   "description": "request.amount 12.5 against a payment record of 12.50: equal by decimal value (step 9).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2RmZGFjODZkIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMDg0MjczZWQzMDJiOGQ0NCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjEyLjUsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.YZ1mc4AhZHFizMYdoq0RbfriLj6Xh9uA2FjHZ-4DZFD6BzZJdHSHEwqvnjpH7fO6nW7HpvS8hek3dlTGpLaq9g",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "12.50",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "allow-below-one",
+   "description": "request.amount 0.5 against 0.500000.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzQ5NjdlZTk5IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZjgwMzRiZGZhN2VkNzBkZSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjAuNSwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.bPHVIjEQ9T4OCSTPr2CPVEjTDAro_UX1qsubDK1nyOBYKYGbgr56lcMvyt0uikMCwJREyLO0cqL5bF_3hx85tg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "0.500000",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "allow-max-precision",
+   "description": "request.amount 999999999999999.999999, the largest amount the issuer writes, against the same amount. Equal by decimal value. The amount is above 2^30, so a binary64 comparison is not permitted; a verifier that reads the claim as binary64 (1000000000000000) and compares that with the record's decimal value rejects this valid verdict.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2RlZTZlNzA2IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNDYwYTk1MDgwMjVkYTIyNyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjk5OTk5OTk5OTk5OTk5OS45OTk5OTksImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.cxtOVb6gRD2-FkrPEPdF3AgZKhABMu6fBlFYD1Lf8LLMVfmJG7fDpq2UNKtD5-yNXA5uzkADq36vTrougyUJbg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "999999999999999.999999",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "allow-supersedes",
+   "description": "An allow from an operator's approval of a review: supersedes names the review verdict.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2IzZWJkMjhiIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYWRlYThkZTM3MTg0Nzk3ZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sInN1cGVyc2VkZXMiOiJkZWNfYzVjOGYwYzkifQ.A48NJ6SP6iXOm36zi4pzQLpll31s0ZpLVzClhzQIhF3H-ebxfN6SP5w2_QtjGUIORnaDgquP2kBYbspcjYfWCw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "allow-unknown-members",
+   "description": "An allow with a private claim and a member of request that this document does not define; verifiers ignore both (Section 4.2).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2ZiZGEwZDI0IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYjZkOTQ4ZGRjMjk2NjM5OSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIiwibWVtbyI6InJlbmV3YWwifSwieF90cmFjZSI6InQtODEifQ.sYP7DNAJqSZt1h9L4eCKkfwJks24rBbDc5JNflszLV0Qn2HTIQBPwTnBURJO0-NJNyI88v-b5MwvznPmmGx8YA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "sandbox-key-testing-only",
+   "description": "Signed with the test key sandbox-example-1, checked by a verifier used only for testing (step 3).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNhbmRib3gtZXhhbXBsZS0xIn0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzZjN2Y2ZWFkIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZGVjZjk0OWY2MTQwMTA5ZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.abn9rHd4a2pCPheLPFQOThfqw0BHun7I32VQsEhq2hSr42xK1iVITIiPlSiSBHeSclcItnJEjaOOdZGQAU7yrA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": true,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "expired-within-skew",
+   "description": "Checked at exp + 59 s: inside the 60-second allowance (step 7).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzZjMTc2MTMzIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNmEyNjFjZTUyODlhMjg1MyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.GILhIEX5U_0hiU49pajUIPhJd6DseBEZ4ZRNORmDUGPvvWC4th8Za_FX7qDl3F1LJ1Mo_QvOjY3jSAB7OuR27w",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374759,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "iat-ahead-within-skew",
+   "description": "iat is 60 s after the verifier's clock: at the limit of the allowance (step 7).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzMzNTZlODcyIiwiaWF0IjoxNzkxMzc0NTgwLCJleHAiOjE3OTEzNzQ4ODAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMzRmMTBlOGU5ZDk5NjE2YiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.Y_xp4-NzyNfzXqvMZjnp2_kHQEy33Eq8cOCndpumd3F4ohAgHkmA0a3BPlqq2UKXIMc3lrgkS39LwBQr1JjHaA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "nbf-within-skew",
+   "description": "nbf is 60 s after the verifier's clock: not rejected (step 7).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzRhMTJiNjkyIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMTZkNTE2YWQ5M2VjZTU5YiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sIm5iZiI6MTc5MTM3NDU4MH0.cS8xR1pWoav8LJJn99LKatpJS3KHMjA9Z1TGIJ22u5Gua9Ljv9jnBAqN9-8NWTIfFBT0aFQsNjkQgOWgnUhFJA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "aud-array-matching",
+   "description": "aud is an array that contains the verifier's identifier (step 6).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzcxZDYzY2Q4IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMWJjYzk0N2FiNGZmMDNhZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sImF1ZCI6WyJodHRwczovL3JwLmV4YW1wbGUiLCJodHRwczovL290aGVyLXJwLmV4YW1wbGUiXX0.gtKL5GmubY6Nm48CHHZBH0GS-plfhV0hGzf8-_0hkD3Zhmi9fFk_tNOgSCmstluvyqaeb_LSJd7WvU0NV0DQaA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": "https://rp.example",
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "aud-string-matching",
+   "description": "aud is a string equal to the verifier's identifier (step 6).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2QxNGNhMzgxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYTgwMDc4NTk2YThmYzlhYiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sImF1ZCI6Imh0dHBzOi8vcnAuZXhhbXBsZSJ9.P6REK5-q15bT5vGxGLpJ5qczDYlBV9X3b_jpdbS-8PBTqhF11pQbo4qY8b7gWCBTuMqf2pwjzYQV4YrjEuxkrQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": "https://rp.example",
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "recipient-unicode-exact",
+   "description": "A non-ASCII recipient that matches the payment record code point for code point.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzg5ZTg3MGFhIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNzA3NTU1OGJhODJjMjRhOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6Y2Fmw6lfbcO8bmNoZW4iLCJjYXRlZ29yeSI6InNhYXMifX0.fGI36-6azO08mTqAWbLPW-wsMPHSDqYBvHYQdxvD-FHTUukAIWhZ-RFSvXzuYH84C_H4EMcDDqBaND6zD3aB2w",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "USD",
+    "recipient": "vendor:café_münchen"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "second-issuer",
+   "description": "A verifier that accepts two issuers; the token comes from the second, with that issuer's key.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImItMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci1iLmV4YW1wbGUiLCJqdGkiOiJkZWNfZmYxNmQ1MGQiLCJpYXQiOjE3OTEzNzQ0MDAsImV4cCI6MTc5MTM3NDcwMCwidmVyZGljdCI6ImFsbG93IiwibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl9jNTdkN2YzNTMxYmI4YjhkIiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.Gybw4ybAVQR4G91oh_cMM4CPT8EBKZ92GYUzHdkZo2p1Y2QHqavK5GrELOtrGHqCWxZHE55fwnwoO8cuaN6PIA",
+   "issuers": {
+    "https://issuer.example": "issuer",
+    "https://issuer-b.example": "issuer-b"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "nonce-seen-for-other-issuer",
+   "description": "The nonce store holds the same nonce for another issuer; the replay key is the pair of iss and nonce (step 12).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzU1ZjViNzQ2IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNmVkMTRkZDQ3NTY3OTlkMyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.u7WnoLo-8gQ1c_s-YokvU32jo9sBnoypIszBtBjccKczaH2ttp2OQyQDzVCH2opj6XjHiMUngL9G7xBlTXO1qQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [
+    [
+     "https://issuer-b.example",
+     "n_6ed14dd4756799d3"
+    ]
+   ],
+   "seenJtis": [
+    [
+     "https://issuer-b.example",
+     "dec_55f5b746"
+    ]
+   ],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "segment-padded",
+   "description": "The payload segment keeps its base64 padding (=), and the signature covers the padded segment. Many base64 decoders accept padding; step 1 rejects it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzRiNzhiNTNkIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fOGU0NDM4NGVmZGZmOTg5YiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sInhfcGFkIjoiIn0=.yhX9Dv0LpZ_kYFyg0aW9YaRTGd7IOM22IRpXomhzn5sDmy9CFKjxEm1LpOcBVw1FjUd2FJgi5slxFdTkB69OXw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "segment-whitespace",
+   "description": "A line break inside the payload segment, covered by the signature.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxl\nIiwianRpIjoiZGVjXzUyYWNmMDM0IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZWVlNGNlMWJmMTVjZGFlNyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.IYafY5OoWj2vDfSQQ_zxOLR5K1ojgZtBCysJQEYOzGkizLkmFhS0i1TYAPHs_s6vtgxWlDejQJlGT1XCxdYDKw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "segment-std-alphabet",
+   "description": "The payload segment uses '+' or '/' from the standard base64 alphabet instead of '-' and '_', and the signature covers it as written.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzMwOTE3N2RhIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZTg2ZDU4OGI3ZTliOWMxNiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sInhfcGFkIjoifn5+In0.mpXqCcg6xpG_CD6H2Jlx6O29VaVJhILukb5ov2Qvv8SzLD096eVtg-FQDM7wV4HamkRJEJRuqSLrW7ywx8St9Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "segment-length-1-mod-4",
+   "description": "A header segment whose length is 1 modulo 4, covered by the signature. No base64 encoding has that length; some decoders drop the extra character.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9A.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzY4ZGIyYTU1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNmY1OTUwY2RlZTk5NjdjMSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.T_-sbGh5J1mvGA3PxYsKcosL-mooMXrBFGhWXg3rD2riABjLIhUsVOFXyBJ-cHyjF3smPjuPUpBvUU-dt8vMWg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "two-segments",
+   "description": "Only header and payload, no signature segment.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2Q0ZWUyN2M3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMmM4NDBhODY3Yjk4NzcyMiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "five-segments",
+   "description": "Five segments, shaped like a JWE, with a readable payload in the ciphertext position.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9..AAAAAAAAAAAAAAAA.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzIyZWZlNmY0IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYmY1NWI0YzdlZmE3YjUxMyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.bjENDgJX-0iXGOkwR4z05chY6rFFFkHshZhAKUZSlwh5MCcYne_P3r7uW4Wyc7SmhKKo6G8Eqqdy3eJcE-2aLA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "payload-invalid-utf8",
+   "description": "The payload contains a byte that is not valid UTF-8 inside the recipient; the signature covers it. The payment record's recipient ends in U+FFFD, so a decoder that substitutes U+FFFD instead of rejecting accepts it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzVjM2JmNDVlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZjZmYzNjN2RkOTUzMjM3NiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFz_yIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.jPEaopyJ5NdYZFJLLZFfnGknQyrKfroBqMmzHuP-a15AFohftcaPnW-27FCORHV9OYXZ8pgQPnUtsM6v1oOHUw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas�"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "payload-array",
+   "description": "The payload is a JSON array holding the claims object, not an object.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.W3siaXNzIjoiaHR0cHM6Ly9pc3N1ZXIuZXhhbXBsZSIsImp0aSI6ImRlY19lZjI3M2MzYyIsImlhdCI6MTc5MTM3NDQwMCwiZXhwIjoxNzkxMzc0NzAwLCJ2ZXJkaWN0IjoiYWxsb3ciLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuXzVhOGU3MjFmMjRmMzg1M2YiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fV0.C18zY0sBPNLC4_tURD6Azha99wce97oUbr5V3UV86niVJnklknXMKYMOLad0t2lIID9R2ui7XRBZnugRpMjAFA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "duplicate-claim-iss",
+   "description": "The payload has iss twice: the configured issuer first, then another.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwiaXNzIjoiaHR0cHM6Ly9hdHRhY2tlci5leGFtcGxlIiwianRpIjoiZGVjX2JhMTYzYzVmIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZGRjMjdhNmE4ZjczOTE3NSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.U5Kv2RVzHoUFXrq4bQ7tQmMgExNtEqL52s6OkP3qchLApk-nf6m3TC0ZmSq2aVJ_-NzmO2KcU9XGpb5PyRRkUA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1,
+    "note": "A verifier whose parser keeps the lexically last member rejects it at step 4 instead."
+   }
+  },
+  {
+   "id": "duplicate-member-recipient",
+   "description": "request has recipient twice: the payment's payee first, then another.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2NkMmVlMjk3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNzBjMDIzNzRlZTA0Yzg3OSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwicmVjaXBpZW50IjoidmVuZG9yOm90aGVyX3NlbGxlciIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.WTZ_oUW7Gh_KartbxC3vhcLrnkTZG6q5W1QVwA0cHx2yERmV1rXlWvtZ6ra5j0z_H127IlE3NPZf1OH71yKIUA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1,
+    "note": "Rests on step 1's SHOULD to reject duplicates at any depth (a MUST for a verifier that parses the payload more than once). A parser that keeps the last member rejects it at step 11; one that keeps the first member and does not apply the SHOULD accepts it."
+   }
+  },
+  {
+   "id": "duplicate-header-kid",
+   "description": "The header has kid twice: example-1 first, then sandbox-example-1, whose key signed the token.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSIsImtpZCI6InNhbmRib3gtZXhhbXBsZS0xIn0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2QxZTRhNzU3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMTIwNTIyMTAxMWRkNmExYSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.upJtR9LxLlN_VoXP0acSz6uc1EFXWNH5zw8FiNyf5cz0sO3Z2gVPG6ya7OJ2afeRupAHIZlSdHI13ccSuMphyQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1,
+    "note": "A parser that keeps the last member rejects it at step 3; one that keeps the first, which step 1 forbids, rejects it at step 5."
+   }
+  },
+  {
+   "id": "header-array",
+   "description": "The header is a JSON array, not an object.",
+   "token": "W3siYWxnIjoiRVMyNTYiLCJ0eXAiOiJKV1QiLCJraWQiOiJleGFtcGxlLTEifV0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2I0NDg5MTk1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYzExOTU3OGRhMzA5YzhmYiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.qxAZRhsbFiYSQ5LGEE_kDiCLB3wERduIMNsYjD5hcpqGcWty_xoEnbDo5dHTKbfiXr1cJ7SFFeWEb41aO8JB1Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 1
+   }
+  },
+  {
+   "id": "allow-reordered-escaped",
+   "description": "A valid allow whose payload lists members in another order, has whitespace, and writes iss and recipient with JSON escapes (\\/ and \\u0061). Verifiers MUST NOT depend on member order, whitespace or escaping (Section 4.1).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyAicmVxdWVzdCIgOiB7ICJjYXRlZ29yeSI6InNhYXMiLCAicmVjaXBpZW50IiA6ICJ2ZW5kb3I6XHUwMDYxY21lX3NhYXMiLCAiY3VycmVuY3kiOiJVU0QiLCAiYW1vdW50IiA6IDM0MCwgImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiB9LAogICJub25jZSI6Im5fZWMzODE5YjlhYzRiMGExNyIsICJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCAibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsICJ2ZXJkaWN0IjoiYWxsb3ciLCAiZXhwIjoxNzkxMzc0NzAwLCAiaWF0IjoxNzkxMzc0NDAwLCAianRpIjoiZGVjXzFhY2IyNmZkIiwgImlzcyI6Imh0dHBzOlwvXC9pc3N1ZXIuZXhhbXBsZSIgfQ.t2Tc5HJwmRZD9WfewBEcjWnVb-lBF2kw7utE-mVeIaakp4F_VsTIwe2xn0nEKUXNNHmSFOJEO453aZ3JZhNVYg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "alg-none",
+   "description": "alg \"none\" and an empty signature.",
+   "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIiwia2lkIjoiZXhhbXBsZS0xIn0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzY5OTA2ZWJlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMWIyNmYxODdkMDdmZThiOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "alg-hs256-key-confusion",
+   "description": "alg HS256 with the SPKI PEM of example-1 (with its trailing newline) as the HMAC secret.",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzNjZTc4NDIxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNzdiZWU3NzJkMTVkMjdhYyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19._92LuCtPfXTswhIEW2Kkcjl_NCrwaXyqgc9eEPSn4dQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "alg-lowercase",
+   "description": "alg written \"es256\"; the signature is a valid ES256 signature.",
+   "token": "eyJhbGciOiJlczI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzYxOTVlZTg3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fOGI0NGI0ODcyODU2MzdkNiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.85UJeXl26ymVmssQtk5KPfzm2858MKh_7340TTRWmq9ejh2SLKpMh31yMrDPi6lyQNZW5ljWWsLel5BYQ53ZmA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "alg-es384-label",
+   "description": "alg \"ES384\" on a token whose signature is ES256.",
+   "token": "eyJhbGciOiJFUzM4NCIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2M4ZjAxNzZjIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMDIzMjJjZjNjZGRhMmVlMyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.rN8Z6ZAwagwhc4VKTSueoxhPmSANCCagYIVx5cpM99UBmySn0aLqNlDQV3qxaz8b6Zb0Ot_hdfuAVnMQMOQpkA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "header-crit",
+   "description": "A header with a crit parameter.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSIsImNyaXQiOlsiZXhwIl19.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzE0N2U3MWNhIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYmNlOWIyZjZkYTM5ZTIyYyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.iYKdR3fyP7KhdkS21cRVmfJt2Z93IhZvRkPsIWBF04f1muSXm1UNMn02FNaVL1FSXy-WghsTMfIpMspyQyKDOA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "kid-missing",
+   "description": "No kid header parameter.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzk2NGFmYWNhIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNjc0ZjMxYTkzNGE5OTg3ZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.JghDWQesS8y2ctsk7-LHjGoxm5nZay34cB2lpnbQLuUbvQU_HnxBAKVAM1H_S03VfdoGzsKR1CM5oduirOGG6Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "kid-empty",
+   "description": "kid is the empty string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IiJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2VhZDBiNmEzIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMDdiZGUxOTI1NDY4Zjg0MiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.iojtYyJaBPaAt0rvDJggeI0L_GjHRspLD98Bx1_aLV9-xQqHF8m20ofdNMDxHzsUQ8XHIyMIAB5nXzEdjqJXCg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "alg-missing",
+   "description": "No alg header parameter.",
+   "token": "eyJ0eXAiOiJKV1QiLCJraWQiOiJleGFtcGxlLTEifQ.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzZhOWJjN2MwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZGZkZmVkN2E5Y2ZhMTdiZSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19._gyx8rPB_NLmFvHNsxpJA9hRgGN5_NvL56FyYxnqkF-z9mDTxZfnIxPd6dTxIlCIzQZV62-XUkzuw36Uye1x-A",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "typ-absent",
+   "description": "A valid allow whose header has no typ. Verifiers do not use typ (step 2).",
+   "token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzVkZTg5OTNlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNDQ0ZDdhNmYyOGY4OWI0NSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.5ac7PQ9Izw4i3hAg1hwZHlADq9Tr6I6qNP9bPIkZe9tmfQdHNfDvZ_dddv8Hosj-5D-FCXRm5Nq77ScpDl9u2g",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "kid-not-string",
+   "description": "kid is a number.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6MX0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzEyZDZhMDg5IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMmViYmEzZmNmMDFkYjQ1OCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.lAOCCRRrIY8p0X5EPMDkLFRCJjXe1tK-xGJSdV_USOhQgaA0ZnHHy2Nox2rAVF3EbeyFvEIVvepQQM3BOxGgpg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2
+   }
+  },
+  {
+   "id": "header-jwk",
+   "description": "Signed with an attacker's key and carrying a jwk header parameter, next to the kid of a published key. Keys never come from the token.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSIsImp3ayI6eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2IiwieCI6IlBaaXpvZEpCaXN3V1M5Rzh5YkI3enR2LWhIUGpuMTZEZHFoZU04d2haaG8iLCJ5IjoicWt1dzdsNXNJTTNVcW45Z0M0NGMxMk80ZnZvUHM0cVdITzhnM0hPNWVqRSIsInVzZSI6InNpZyIsImFsZyI6IkVTMjU2Iiwia2lkIjoiYXR0YWNrZXIifX0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzZkMWJmNWFmIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNGM0NDI0NjZjMjcyNTk4MCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.bg42NTNEZ3TyOrvXybTvuajt2S2AYYr3rDE0xMMPAWx5YO7ueS5g6lKSsKfY-AEHmYDrMD_3QDGw1kjMaWGHbQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2,
+    "note": "A verifier that ignores the parameter instead of rejecting it (a SHOULD in step 2) rejects the token at step 5."
+   }
+  },
+  {
+   "id": "header-jku",
+   "description": "Signed with an attacker's key and carrying a jku header parameter, next to the kid of a published key. Keys never come from the token.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSIsImprdSI6Imh0dHBzOi8vYXR0YWNrZXIuZXhhbXBsZS9qd2tzLmpzb24ifQ.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzQxNDRiZGEwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNThlZTlmN2YxYzE3N2YzMCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.I2y8Wh0K4oQha_qp4Rthn0MZTubd2397k62Hm3LK9h2D17J5-7-ZhCwc-S3nGjBWjIEU-zB8-zycHWwJ-uJSCg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2,
+    "note": "A verifier that ignores the parameter instead of rejecting it (a SHOULD in step 2) rejects the token at step 5."
+   }
+  },
+  {
+   "id": "header-x5u",
+   "description": "Signed with an attacker's key and carrying a x5u header parameter, next to the kid of a published key. Keys never come from the token.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSIsIng1dSI6Imh0dHBzOi8vYXR0YWNrZXIuZXhhbXBsZS9jZXJ0LnBlbSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2FkN2U5N2Y4IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNWY5MTYxZjg5NjllYzhjZSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.ireHrRHyxvGK9DcWqzwZT362V9A8VHwy1VZ_9Ex899ZPsKK6OoIU7m3f1qxdo2ufuz8cFWJGGouUcM_6wGr0pw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2,
+    "note": "A verifier that ignores the parameter instead of rejecting it (a SHOULD in step 2) rejects the token at step 5."
+   }
+  },
+  {
+   "id": "header-x5c",
+   "description": "Signed with an attacker's key and carrying a x5c header parameter, next to the kid of a published key. Keys never come from the token.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSIsIng1YyI6WyJNSUlCZmFrZSJdfQ.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzEzZGZjNjI1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMzMwNDNiZjE4Nzc3YTQ4MSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.-U-ZXJXIoHtdWjXi_m1M6LxEVV5hP22652LQ4KxBo2-IbbceG-hgM6JyU3F72j2wez_4uIPtNyDNq46ME7P0yg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 2,
+    "note": "A verifier that ignores the parameter instead of rejecting it (a SHOULD in step 2) rejects the token at step 5."
+   }
+  },
+  {
+   "id": "sandbox-key-production",
+   "description": "Signed with the test key sandbox-example-1, checked by a verifier that protects real payments.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNhbmRib3gtZXhhbXBsZS0xIn0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzg5MGIwZmU0IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNmQ2NjI1YzEwZGZiNTkyZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.yFiiQFtuR0yTfjxp6KuywFI1W9W9TMLRZBswDxqfPd1Ntr5wTiErUtpv1pwV-7DLDjrDl7dZqWIoW_AjUhLlRg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 3
+   }
+  },
+  {
+   "id": "production-key-testing-only",
+   "description": "Signed with example-1, a production key, checked by a verifier used only for testing. Step 3 rejects test keys outside testing, not production keys inside it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzAwYzEyMzZiIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fOGYwNzVmZDQ5ZGY1ZTNkOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.NCd6aiHH55iJf8L0XShFV3kG6kcuRI3RwAHgUFf8r5ZJtORbXfcKZE6s05tuwi_GZ4RNj0chP8WjBZ54AFlxug",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": true,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "iss-trailing-slash",
+   "description": "iss is https://issuer.example/ (trailing slash).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlLyIsImp0aSI6ImRlY19jMmQzOTIxNiIsImlhdCI6MTc5MTM3NDQwMCwiZXhwIjoxNzkxMzc0NzAwLCJ2ZXJkaWN0IjoiYWxsb3ciLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuXzcyYTcwZDExM2ViMTZlYTYiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.-AVN3MzO9pQbfQSDra4GrF6nZcWQco_A8N3NTgpyOGk60yYq1I_4OBpbDVERS4VVWE6D-zPa_7KV8etWP7AJ2g",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "iss-case",
+   "description": "iss is https://Issuer.example (case differs).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL0lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzdkNDJlYzUwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNGE1NzI5ZTE2MjRkMTY2ZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.J2HSlFYGrKYUn0qXPXjj3DsmV0fFRkqagTHLRf7CcSYE0lUWWT7d2KjRPLa2hLQeIdp4pO9sqmjTca--KvV3SQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "iss-missing",
+   "description": "No iss claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJqdGkiOiJkZWNfODliZjBmZDIiLCJpYXQiOjE3OTEzNzQ0MDAsImV4cCI6MTc5MTM3NDcwMCwidmVyZGljdCI6ImFsbG93IiwibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl83YTdiOGZhZDEzYWUwODEyIiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.h-MQFoaZ_n_B0z9-klzgFuB4Xl1CYJGwTdeun_30jlP6oYr-40ZSf5ORsXqMH8v68eBnCpjcRZwM9JvVTlE0fg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "iss-not-configured",
+   "description": "iss names an issuer the verifier does not accept; the token is signed with example-1.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL290aGVyLmV4YW1wbGUiLCJqdGkiOiJkZWNfODVmNzE5ZDAiLCJpYXQiOjE3OTEzNzQ0MDAsImV4cCI6MTc5MTM3NDcwMCwidmVyZGljdCI6ImFsbG93IiwibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl80OTU2NjczNDZlZTBlOTNjIiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.7gnQ2GFL6jokT_oWNobZSPPnCqeQcBmqWYJljzRbVq5w3u4IzqulyULOI1cpQqP4nhVLwdwaOmxek8hDv5_Usw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "kid-unknown",
+   "description": "Signed with example-2, whose kid is in no key set. A refetch returns the same set.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMiJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzI0ZTRhYjhlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNzQyYTE2MjcxMjQ0MDRjMyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.LKjUuSaU6lJQo2lKGMQsdMqgyJFoTEd2ytaMnbfCQet6-UcmHL2a7IyRmBQIAEIq27YbQPBKpyqhHIkaySCtuA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "kid-from-other-issuer",
+   "description": "The verifier accepts both issuers. iss is https://issuer.example, but kid and signature belong to https://issuer-b.example's key b-1. The key is looked up only in the set of the issuer named by iss.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImItMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2ZhNGVkZmE4IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYTU5NjdjNGVkNTFiN2U2YyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.esL1xafJssnL7C42f0Hj1ZpkgGyt_glFpAKfJ4TLIZhQoObWwb8QeYp726ZwQOQF-chDgji7xlBSMJa-1M7OnQ",
+   "issuers": {
+    "https://issuer.example": "issuer",
+    "https://issuer-b.example": "issuer-b"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "jwks-duplicate-kid",
+   "description": "The key set lists kid example-1 twice with different keys; the token is signed with the second (example-2's key).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzE2MmU1Y2UzIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNWRjMWRkYzM0MWZlNTkxOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.dlLG-Musx49dwdViK2e9E79WhE6mPTGI4xBBH2kigk3nfTIUTqez2CrZugqJnghJfwXGF7DRL5F1sRcnsuQu9g",
+   "issuers": {
+    "https://issuer.example": "issuer-duplicate-kid"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4,
+    "note": "A verifier that takes the first match rejects it at step 5; one that tries every match would accept it."
+   }
+  },
+  {
+   "id": "jwks-key-alg-es384",
+   "description": "The key set entry for example-1 has alg ES384.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzYxNzgwNTA4IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYmI1OTBjZjc5YjkwMDFjMCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.XGOwPKfKLkx_I9bDruTkCNMYriTN5YvFRPUyQx2lVJ_zg87sKxAZeezf6uP-S39xOyv9_Hy42HdWtheq5C6xvA",
+   "issuers": {
+    "https://issuer.example": "issuer-key-alg-es384"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "jwks-key-use-enc",
+   "description": "The key set entry for example-1 has use enc.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzdmZWNlNWE4IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYzZmMDYzMmUzNmJkNzU1NiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.A4KNDzRxsW8xH1sFkZIuTvB6lsr8GK4_Bw5fG7As5CY7F_sq5oIZlTZwOgBb1Z-fsfrZfSscpZiTYK6L6e7KiQ",
+   "issuers": {
+    "https://issuer.example": "issuer-key-use-enc"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "jwks-key-crv-p384",
+   "description": "The key set entry for example-1 is a P-384 key.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2FlMjIwNTZmIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fM2E0NWM5YTgzYjE0ODRhZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.nb4rOWNXbPmExX4EERHHtuqa-QE0YyBYYJV6p1crFyLiDnoz6B6i-gNZ8ltZxUUePnOdMpl-_20GyJP96DZycQ",
+   "issuers": {
+    "https://issuer.example": "issuer-key-crv-p384"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "jwks-key-minimal",
+   "description": "A valid allow checked against a key set entry with no alg and no use member; both are checked only if present (step 4).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2U0ZTQ3M2I1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZWRhYmZjY2NkOTM0OTBlNyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.tFMGR5AkyTsj-axcQ0QcDm0MNYCEdz_mk5VdRWjt9QCQ87nTxPc6b-7OxQy1_XOLNYLiV_qkGmnIBx_MqxC8CA",
+   "issuers": {
+    "https://issuer.example": "issuer-key-minimal"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "jwks-key-off-curve",
+   "description": "The key set entry for example-1 has y increased by one, so the point is not on P-256. Step 5 requires an implementation that validates the public key.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzYwMGE3YWNkIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fM2JkZTI3ODNhOWQzZGUwZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.MXBt6leFqQRCmRf9sg-KtKP55SipfPwqrzEn0MCj_73I2xJLEpOl4Wu8KMKc0rOwr9P9eZlEUpHaMes4W9ra6A",
+   "issuers": {
+    "https://issuer.example": "issuer-key-off-curve"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "tampered-amount",
+   "description": "The payload's amount changed from 340 to 3400 after signing; the payment record says 3400.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzJhNzQ2NmYzIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZmRhYjM1MmY2MjljMTFkOSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.EKLdO8GvSrJxcgpmy7j_SAQn4em-3mv6IHF0c4_H3wiTNotRZW2YBifEh4HgvN7-uVIdMKwlFZe3dFnncdnEaA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "3400",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "signature-der",
+   "description": "The signature re-encoded as ASN.1 DER.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzEyNTVkNmE5IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNjU5Y2UxNTQ4MWMyOGVlNCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.MEQCICtd2KqhimAED9KPA2ePMvZMgQj24TBtErFDU3sy_SkyAiAZYMy-yEOJ66heGYiBqWgGmKaeHQEDJ11fFXiQHPESLg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "signature-63-bytes",
+   "description": "A valid signature whose R begins with a zero byte, written with that byte removed (63 bytes). A verifier that splits at half the length or pads with zeros would accept it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2I0NzlmOWFiIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fY2Y1YWE0YjA4NGQzYWFjZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.Al5zjajntXh7rnvUMJQwEk6xv_zvLDe64HHHVofffArO7N7ofkc48FYuijKNno7PFzJwcFvn4diUM3bzdkIB",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "signature-zero",
+   "description": "R and S are both zero (CVE-2022-21449).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2E3YmFiMTJjIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNjIzMjJkNmJiY2I2ZjJiZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "signature-r-equals-n",
+   "description": "R is n, the group order; S is from a valid signature.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzYxNTY0ZmM1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMDY4YjM0OWQwNGE1NTgwNSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19._____wAAAAD__________7zm-q2nF56E87nKwvxjJVFQinukg9q0FWSG-Tu3t5fuQGYkCkaB8yasxXDzL0DwLQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "signature-s-equals-n",
+   "description": "S is n, the group order; R is from a valid signature.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzNlODMzMjkxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZTdlMjc0MWZjYmYxY2FhZSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.t_xFOui6WDLmoLqInx-X3jWD0lh6IlkQlrERfsUMDpj_____AAAAAP__________vOb6racXnoTzucrC_GMlUQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "signature-wrong-key",
+   "description": "kid example-1, signed with example-2.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzcxNDg0YWJiIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMDIwMzNmYzE1ZDE5MTU2ZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.aM7jCLWsBUpUAeyfb9Bx1EhV_phVkgJz0uEqGqsMk1ZzUfAFPT215Nu9aGzeEy6eHI6Ra41yMMbH-FZ6BvtbxA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "event-token",
+   "description": "A webhook event token: same key, issuer and header; a type claim, a jti beginning \"evt_\", no exp; data.verdict is allow.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZXZ0X2E5ZTQxYzI5IiwiaWF0IjoxNzkxMzc0NDAwLCJ0eXBlIjoiZGVjaXNpb24ucmVzb2x2ZWQiLCJkYXRhIjp7ImRlY2lzaW9uIjoiZGVjXzM0MmNiZmIzIiwidmVyZGljdCI6ImFsbG93IiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX19.QKyi5kvIpB524qvXxSj748ovvELUin_Jr5CVwmixecwXb8J3vY-lw1SkNegedqY7PmAqRMC7JV5fytds3l4QuA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "type-claim",
+   "description": "A complete allow that also carries a type claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzQ4NzliMjg3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZGRkNTAwNzBlMTczMjg0NyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sInR5cGUiOiJkZWNpc2lvbi5yZXNvbHZlZCJ9.xMbjwTMbXdEqsejuUy9CT8sWSdGxN8QJntaKZ0r-5XNGkUuhp0rppKhhzsCtpMNk5omks4yVVaQEECugW8lfZg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "jti-evt-prefix",
+   "description": "A complete allow whose jti begins \"evt_\".",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZXZ0X2ZjNjdmNzk4IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZmY2OTVmZWY3YTQwMDg1ZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.Z-bGuU2eL9KkZ1ThL_iFVgJWxc--ruuwcrldZ6GoSe4y0ho8cSzRZvyn2JZmO7XmCC6UCwy182gEwmpiTCg31g",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "jti-missing",
+   "description": "No jti claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNWI3Y2YyZjFmOTI3ZWVhMyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.w4fCMUOKgszzFB1gBj4xRHanluUKv5YV8ZdTWbs9a2msvd7QpS-7T3EQ04hCAminTkKhG1b-gs920K_OEr6JGg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "jti-empty",
+   "description": "jti is the empty string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMDlhODY3MDg2MDAyNjEwMSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.ym5h381J3FhvKpcUcIH3ElDU1q89_tn_lm_RMFPj2_PHEHPVMslCIwRttDPToe-Ud4n62pDBFFHEFQNh0b1gaQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "iat-fraction",
+   "description": "iat is 1791374400.5, a NumericDate that is not an integer.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzJmNjI2MjYyIiwiaWF0IjoxNzkxMzc0NDAwLjUsImV4cCI6MTc5MTM3NDcwMCwidmVyZGljdCI6ImFsbG93IiwibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl85MzE0YWQ3ZmNkZGNjY2Y2IiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.HuVn-r8prNxHZNtfvpmsLB52mIDDL7ZLBWKUddUSmc-ISCoF7NwlhBgMO-do8NcEnp_u6rGa2amJZGcgXr561A",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "iat-string",
+   "description": "iat is a string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2Q5MDRhMzAzIiwiaWF0IjoiMTc5MTM3NDQwMCIsImV4cCI6MTc5MTM3NDcwMCwidmVyZGljdCI6ImFsbG93IiwibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl9jYWFlYjc2NmZjNTk1ZDI5IiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.rQx6XQEvpnlRm4jFDmI6xPkwFS3gUrBYELPmmoEy6w84apHm5dSLb5Xh6pPRSnYBf2Z3fL5y4UZ4qmDiqe946Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "exp-missing",
+   "description": "No exp claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzhhYWNlNjI4IiwiaWF0IjoxNzkxMzc0NDAwLCJ2ZXJkaWN0IjoiYWxsb3ciLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuX2IzMDlkY2NiZmZjYzM2NTEiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.WafZc6RibkNftZCA6iguzkPAkPXWWzbwlya_iuUiE6R9qUO7JTovN-UETMgp_7PuDMYaOASw26kEWOyzCaoJPw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "iat-missing",
+   "description": "No iat claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzRmYzJlZjFkIiwiZXhwIjoxNzkxMzc0NzAwLCJ2ZXJkaWN0IjoiYWxsb3ciLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuXzBhODUzYWRhZTkzMTdiZjAiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.nqSQl-gkgSO1UOAeg8AEi3-MDdBxQUbD0qNnZzyexOZ5ir32Fz2rygJs1cjjh4ZzSjRYf3hoj5WCi7yoRP6quw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "exp-equals-iat",
+   "description": "exp equals iat (both 30 s after the verifier's clock, so step 7 alone would pass it).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzJhMGFmMTVmIiwiaWF0IjoxNzkxMzc0NTUwLCJleHAiOjE3OTEzNzQ1NTAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYzBmYWM4MDQ3M2ExYzNhMCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.kfvLl2K0i49hyxAkYOThysNvGCpJVjgHOZhj5xOLQ0Paaxz5l9Obl1MnjhKjJJLdU4ba-aNL1iTkM4qKZowa9A",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "verdict-missing",
+   "description": "No verdict claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2I1MTA0OWZmIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYWVjNWE4ZjI2MTJjMjRiYiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.vUc2pT1OuUAKcyDZKaSUo6tPFTrMqAq_5oB3HMadSZV5NSa5RT0qsGy_o0vNjoB7ws68grhhbmG8g6JhHBPBrw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "verdict-empty",
+   "description": "verdict is the empty string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzVmZTEwYjJjIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiIiLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuXzgwYjI5MTc4NWQyNTM1YjAiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.-EcGaSXZUGJdPQRF6MsKlxQv-VYDWrDzWvqpibfjZ8oYGlaTz4uTI8jtS1F8y6ARbcfJd2ph6okbH-buxLovkA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "policy-version-missing",
+   "description": "No policy_version claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2I0MzM3YzBlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJub25jZSI6Im5fMGE1ZDUxNDIwMmU5ZGU3ZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.gtTSEVs1rj7mqP59SgSpGUhJtpZmZPLgwwPgr9O_yKenbiilqubt5hdk4Fe_glKqwsEdy0Ku6-L6eAEWDGHA5Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "nonce-missing",
+   "description": "No nonce claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2RkYWU5MTE1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.STTBNXvYcjVdfQazrbslqePdYDq3sUo38Dz-oXl-30dF7KhAhsAC3GNYqYfSFZ3i3ddTWmVPrOaoYZ6zycEgTw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "nonce-empty",
+   "description": "nonce is the empty string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzkwOTBhMzZhIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6IiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.fcqfM7y-F1WBXr_kfm8pAaD9tF2Y1fzMjY5GVDWjxBxzlbAcck15hyZAZnqbEDkJeizt4tvx4YafXymQE7UvLw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "request-missing",
+   "description": "No request claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2Y4NzgxMDM1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNjI5MzNjMDBkNDBkYzE1MCJ9.UO73gDH0VJKlDuDscpvpKgNSxYt5hRlxE3rIEZUj72zfypqbMSm1VlGn3tpK9BMa3gvE_DbWVMgMX5ULeSGkNQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "request-array",
+   "description": "request is an array.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2FmYTcwMWNlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMmMxMmY3NDFjNDU0NzdhOCIsInJlcXVlc3QiOlt7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9XX0.9RstuYbEGVMbJqQnfyawn-VevmS1ewV8vj43iOyLvmuYCo8NvRb4i5LTWCHlIiP2tqFslB3aIMzxbp5_XKQzAg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "amount-string",
+   "description": "request.amount is the string \"340\".",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzM5NGM5MWFkIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYTBmNTdlOTk3NWRmMmZmZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOiIzNDAiLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.BU4pKcnsURRuKqV91KHsDJxFoUP97eXGxSZ7j3OzzmSbVKgPwJVu-P1dGwPvaHNVLvooxJfPg5-rVKh23TMzaA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "amount-zero",
+   "description": "request.amount is 0.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2UyMmQyZDI3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZGYxNGJhYzFlMWFmNGZmNyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.X8QBXN37y8AXd4mnAh8kF7gk5N0cw08t7FcYERDqSH_qAnWxzGKcftsQTNee7xVhK-yj_t9JLQZZGqAbUCFQ3g",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "0",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "amount-negative",
+   "description": "request.amount is -340.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzM5ZmNkN2Y5IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZTQ1ZWRiOWZlYTU5YWM4NiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOi0zNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.pqTF7GSBR_9Fcscm0OLbykyGVWpze8NKJWByJDj-zSRQqilDLx-d7WZeJHSCzODhokGnKhPcbf-L-TOdarVEQA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "-340",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "currency-missing",
+   "description": "request has no currency member.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzEwZjRmN2QzIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fY2ZkN2ZiODE3NGM4YzIyNiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.bOwR9cnf6nuTQ8oa01AYHiIQJJT2jWiQwFFvMoooaurs1AuDNsFg0l5lHwB8MgTzvFU8A51SgM_6KY5ci1tHBw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "currency-empty",
+   "description": "request.currency is the empty string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzg5MzE0NTA5IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMGM3MjI3OGU1MGUxNWFkMiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiIiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.Wi3GTOz_ULMZoiAiiUeibrzuQwsBbFeAs71DZfH_r-6_JKXu-2e3XZRkzW2cInTihmN2SXZXGxb27rSVH6hrjQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "recipient-empty",
+   "description": "request.recipient is the empty string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzU0ZDI5MGEwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZDk2NmQ3ZDAxNWNlNWU3YiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiIiLCJjYXRlZ29yeSI6InNhYXMifX0.GX44sF0cgPmWNvBokSFIDtgpaynV-T7m7Utc9pHELpIQpnF0sRIP_1S8bsVfggIfBX9ENMft8DIalzjCD6bAYw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "USD",
+    "recipient": ""
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "agent-missing",
+   "description": "request has no agent member.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzE3MDVjMzI5IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNmU4ZGZjY2FlNDExMWZjZCIsInJlcXVlc3QiOnsiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.Mva5xgad8CMlf3zmD1TZPqIri5RVPq0zAaGphb-ZZ_GumKa03_bWZdrahZbECXT474Jt0-rAqG-I0FnsbcDL2Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "category-missing",
+   "description": "request has no category member.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzRiYjk5NTIyIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNjIzODZmNjliZGYxMjQ4YiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIn19._lfJbZC9Xqli9EJzdUH1bIfB0XvhLb8l8dCVBY0XpFT9t_n_Qy4QPr7rrY6GFNeKpvAXQM_pS9Zp5_34mh2rKw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "recipient-missing",
+   "description": "request has no recipient member.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2VlMzM4MTM2IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYTM5NGE4ZmUyOWYwMDVlNSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJjYXRlZ29yeSI6InNhYXMifX0.POjtuH-Cc4ry5kgAk1oZWNvNKaOzxnXfpSB25ec5s2d6Xh_P7eut85hCgitrM7qKa0KDUipfGO1CR_Co4Oy5Iw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "amount-missing",
+   "description": "request has no amount member.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzg1MTZkMWExIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMzNlMGExMDM2YjAwYTM5MyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.rzeFZ6sIFPxJLyd9vQtt3J8hpDqpQA5vZ-wjcsSn39uFQJC4eVDnIJNqkRvRKThNxKPVcgv1tQj8tF38nnf6cQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "agent-empty",
+   "description": "request.agent is the empty string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2ZjOTRiODJhIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fM2Q5YTU1MDljNzJiMzhjNyIsInJlcXVlc3QiOnsiYWdlbnQiOiIiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.jyruQUrh_gUSB7JcgPVgD4FdMDoAdZWdCXGKBfDXN8W8sUaz0g52AIHypRhm5cEkIAlW5XjYq63ySPwc9PmPRw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "allow-without-mandate",
+   "description": "An allow with no mandate claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2E5NGYzZjU4IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl81YjEwM2FhMmMwN2Q2YTJmIiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.sq-lOkGPwhIc61A3CUxnylzRVIJnrrpBhpvv8QdVgRjsdyEIY7RDVpHTqWwVa-PPePqtObJtQtVP1zbeH3cwzQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "mandate-empty",
+   "description": "An allow whose mandate is the empty string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2U2YjllOWY2IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fN2I3MWJiMDE2MmJmZTI0MSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.GKaqT1Rzkgsgl-GmqDYJ9PFoVVeck-wbCdpz9ftJDgwoFz-6i_je8hS2prVvLmernxdBNtniXh6xGqcL6nrgXw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "supersedes-on-review",
+   "description": "A review verdict that carries supersedes.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2FlZTc5ZGRjIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJyZXZpZXciLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuX2JlY2Y3ZDkyZGU1NWQ3MWYiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9LCJzdXBlcnNlZGVzIjoiZGVjXzY0NzQzZDE1In0.mlsJa8eSgnMhabH41tjmep7dMRxX7jURnblCHGbK-tbjrn1RXX8PDqqOfIxBsPjRwASiKeGjDL3V-B1HErjhnw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6,
+    "note": "A verifier that checks the code first rejects it at step 8."
+   }
+  },
+  {
+   "id": "aud-other",
+   "description": "aud names another relying party; the verifier identifies itself as https://rp.example.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzE2Zjc3NDM4IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYzgwYjcxZmU4YzlkYzlmYyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sImF1ZCI6Imh0dHBzOi8vb3RoZXItcnAuZXhhbXBsZSJ9.ckuE335wGAoOdfqjGqriK7zGqmX21X0JAivu6rViyiTAKknYBUWnCyvLJOPa1dAkABsnAgbv5_0ENF58K6GxIw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": "https://rp.example",
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "aud-no-identity",
+   "description": "aud is present, and the verifier has no identifier configured.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzRmNTMzOTliIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fOTA4MGU2NmQ0MGVmOWIzOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sImF1ZCI6Imh0dHBzOi8vcnAuZXhhbXBsZSJ9.YUAsg4is2yrHdeJbQXxlCHQMHcD7QqWVXvhz9UI_BiglCp1m1HpYHDmkQ3blKyrP-tzTnTfw3vLdReT0eAZE2Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "aud-array-no-match",
+   "description": "aud is an array of other relying parties; the verifier identifies itself as https://rp.example.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzhmNjE5ZjkxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYjIyNTMxNDI1NThlZWY1MCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sImF1ZCI6WyJodHRwczovL290aGVyLXJwLmV4YW1wbGUiLCJodHRwczovL3JwMi5leGFtcGxlIl19.nzxzd6QzxezI7gLHiKw4-mJmMA193wEOuib0vxXhjaWpkl9kwhxUIVaCcmRwgIvb4fs2sVBwcaNFvnzVdp12Og",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": "https://rp.example",
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "expired",
+   "description": "Checked at exp + 60 s, the end of the allowance.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2U0ODZmOWIxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNDY2YWUwZWUzNWMwN2Q4NiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.wjXMiYjbXrihfWuS4gedDgyZ2Y0LEpegnYXtfKIG4OA4NJViqppaACJNdsfjfD2P5uy5YQryUc0Aox9wWnFKlQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374760,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 7
+   }
+  },
+  {
+   "id": "iat-ahead-beyond-skew",
+   "description": "iat is 61 s after the verifier's clock.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzFhYTYyYmY2IiwiaWF0IjoxNzkxMzc0NTgxLCJleHAiOjE3OTEzNzQ4ODEsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYjk1MzIyMzBkYjc2ODczMyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.O4uEo76rIW818ys2lABzyVnPkK4my_hh8vqQL8RQwDoMka5CQFLBOoE1ipl7kP-IZUQSy1yqEaTG7FLctFGhpg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 7
+   }
+  },
+  {
+   "id": "iat-in-future",
+   "description": "iat is an hour after the verifier's clock.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2Y0N2FkZGM1IiwiaWF0IjoxNzkxMzc4MTIwLCJleHAiOjE3OTEzNzg0MjAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNzM5OWQ4MzJjMDJiYjkzZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.4uqtyLbVQm-ZwcMcrnPdXrK2P4UuiwIAL37rChGmDvNSFpLlX_OjmfRwQtdp443ElQT5h8ShE-djrn_YlXfOuA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 7
+   }
+  },
+  {
+   "id": "nbf-beyond-skew",
+   "description": "nbf is 61 s after the verifier's clock.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzljZDZkZTY3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fOGZkOGI1Njk1ODFiYzA3MCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sIm5iZiI6MTc5MTM3NDU4MX0.nNSbUZPmwUBcCkDw4FGkfBADuhSXQ7UUyrXRv6GUz6kUUL-BRLGvry3F4lVQir7bCf7pui5wessxIMkYtF-MHQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 7
+   }
+  },
+  {
+   "id": "review",
+   "description": "A review verdict: signed, not an approval.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2JhNzg2NzEwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJyZXZpZXciLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuXzIyNWNhY2NmZTc3NGRkNGEiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.kJziS65YJlHd-E--c30nxBG7lQP5I6tMt1f7ooyt6EHHR7DIRzFwzBmRV5ogLJ68HW3v_UNSt2w29CBscgc4aw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 8
+   }
+  },
+  {
+   "id": "deny-limit",
+   "description": "A deny_limit verdict.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2MyNjczOTE0IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJkZW55X2xpbWl0IiwibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl9lNjFjNjJkYmViZDkwYWRjIiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.YVhumhvYdJJoctHbw0IGcK0m5hCJHYpulRo4_QlCbJ7s4b-DPQYYMM7s8o8Mwzvagl2ZAw7MKCMshy63DygwVA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 8
+   }
+  },
+  {
+   "id": "deny-no-mandate",
+   "description": "A deny_no_mandate verdict, which has no mandate claim.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzg2N2Y4MzI1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJkZW55X25vX21hbmRhdGUiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMmUzZDk2OTMzOWUzNTkxOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.Z5qeDR-FOz7tFgI-uZcc-JO_qQ3FIDlaik35z2WaOT70ynXuW4LMtil6j3IdJ2xxxeiHhoEnsTLrUaMOZv12mg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 8
+   }
+  },
+  {
+   "id": "unknown-code",
+   "description": "A verdict code this document does not define.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzhhZWFlOTgyIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvd19wYXJ0aWFsIiwibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl84N2Y0ZGQyZDFmM2ExZjIwIiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.dETGc5Nf-6papAYifVeKpQos6_uRj9TmJMjxjrcZMAGuYrKnE8iF1-bIsc__z-gS_WHpEnaCsKT8Gs3dPxMvEA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 8
+   }
+  },
+  {
+   "id": "allow-capitalized",
+   "description": "verdict is \"Allow\".",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzU5NzNlMWQwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJBbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMjQyMzlhOTFiY2E0Y2YxMyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.KXNvJfke_nppOOwAhKEVWUhBZUrL3Tfx1A2eMs5Fh5nNCsqncE1Mvaz-GBYE86ibxCSB8Ts-kyMiqtDM0xZm7Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 8
+   }
+  },
+  {
+   "id": "mandate-not-agreed",
+   "description": "An allow under mnd_51c0e2aa, a mandate the operator has not agreed with this relying party (it agreed mnd_7f3a0d12).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzRkNWI3MzdhIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfNTFjMGUyYWEiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fM2FmZThjZGZkNDkwYmFiMiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.q1BwCQbQfQ49jf4aZkkvVDzEEu7CH9_snGxv91T2k2BgAHN_81mXlmM6BAhKhJM0Xgg_ptXA31zLrXMAoq6ZTg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 8
+   }
+  },
+  {
+   "id": "amount-mismatch",
+   "description": "An allow for 340 against a payment of 340.50.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2ExYTk5NDA5IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMmU5MDhiOGY1ZWQ3ZDI5ZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.oNJ6vD8qA8fRbUZEJNXLokzoq2jOviDPjSMJUIEVjXTQCRDxL0STiKFNA0W5b4sKOpz5995yX-mE9TQG2koQWg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.50",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 9
+   }
+  },
+  {
+   "id": "amount-binary64-collision",
+   "description": "An allow for 8589934592.000001 against a payment of 8589934592.000002 (Section 4.6). Both parse to the same binary64 value.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2JkZGQwZTJjIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMzRiYTU5NjM0NzM2MzUyMSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjg1ODk5MzQ1OTIuMDAwMDAxLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.BAt6Zxr5qITyd3zmAlSudr8-OXlfE5EklLHSVNIxPhZmsgC1ziUdC-x_z16RDm2OOShCwqHSho1hHQkzdWgWGg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "8589934592.000002",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 9
+   }
+  },
+  {
+   "id": "amount-sixteen-digits",
+   "description": "An allow for 9007199254740993, which has more digits before the decimal point than the issuer writes, against 9007199254740992; the two are one binary64 value.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2IwMDc5YzE3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMzA0YzUyMzA0YTM0OTZlMiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjkwMDcxOTkyNTQ3NDA5OTMsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.caSEyg0FSWg2C37npoFQgCL6LT87ldl4-8LnGbiQBdUDRH9VjqcrZ7O6ILk8oeeB6UhVcilmw42aMd_iACE15A",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "9007199254740992",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 9,
+    "note": "A verifier that applies the amount-form check of step 9 where it first converts the amount, for the comparison with zero in step 6, reports step 6."
+   }
+  },
+  {
+   "id": "amount-huge-exponent",
+   "description": "request.amount is 1e400000. A verifier rejects it without expanding it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2EzMDBmNjAwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMDg3NWE4MmI3NzJkNGRkYSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjFlNDAwMDAwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.ShSPoRFqErB5ExxyNZZhwjYOwBObIg3r7Xjnpbg6bBqh635tvMQoSEK-NwR6e_RLchLmZuiL4J7CXiQg9wc5zA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "1",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 9,
+    "note": "A verifier that applies the amount-form check of step 9 where it first converts the amount, for the comparison with zero in step 6, reports step 6; one whose JSON parser refuses numbers outside the binary64 range reports step 1."
+   }
+  },
+  {
+   "id": "amount-form-exponent",
+   "description": "An allow whose amount is written with an exponent (3.4E2), against a payment record of the same decimal value.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzBiNTg1ZWE3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZTc3YjYwN2NlYmE2YzFhZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjMuNEUyLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.eZyFo5r_waxhqt09CwWdsohT5UFpFvzzncdKT2KeZFcmh0Q8c4pLippHfJSctnM7gMuiLYVaHbbf0ld0mxEoFQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 9,
+    "note": "Rests on the SHOULD of step 9: the amount is equal by decimal value, so only the check of the form the issuer writes rejects it."
+   }
+  },
+  {
+   "id": "amount-form-seven-decimals",
+   "description": "An allow whose amount is with seven fractional digits, against a payment record of the same decimal value.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzJiZTM3NmExIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZDYxYjlmNzQ4ZDFjYzdkZCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MC4wMDAwMDAxLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.riB1Smqgm6HRTWgD0DPUFF4n-Izee742zE5KuhKN8LjERak1xygQjrSHmLjWNWedSVxN8llpQd-e9uU_89OxNQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.0000001",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 9,
+    "note": "Rests on the SHOULD of step 9: the amount is equal by decimal value, so only the check of the form the issuer writes rejects it."
+   }
+  },
+  {
+   "id": "amount-form-sixteen-digits",
+   "description": "An allow whose amount is with sixteen digits before the decimal point, against a payment record of the same decimal value.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2M1OGRjZDYxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fY2Y4NWJlYjI0OWNjYzFkOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjEwMDAwMDAwMDAwMDAwMDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.1slRFdNv-xxQwS2vtGS1AHu0XeSjpHvopinIAhBL5AxOG4_1vqI4eOt9zJNzh4qSTn2lHc4jOf9WgvrfZIBWxg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "1000000000000000",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 9,
+    "note": "Rests on the SHOULD of step 9: the amount is equal by decimal value, so only the check of the form the issuer writes rejects it."
+   }
+  },
+  {
+   "id": "currency-mismatch",
+   "description": "An allow in USD against a payment in EUR.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzI0NDQ2NjIzIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fODYxZTMxNzQ1MWIyNzlkNCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.Z7AAbJjwmpHpN_IranT3hXaVfLlF0YWzQvyp_rUQkq0LqwgtxoHHoRYZ5X28HfyLuVsH48n6cnU5BF5bzBFnxw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "EUR",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 10
+   }
+  },
+  {
+   "id": "currency-case",
+   "description": "An allow in USD against a payment record that says usd after any conversion of Section 4.3.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzZiMjEwMjdlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fY2QzZmZlYWY0MDIxYWFkOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.Qy3NaieoV1E1bcCFOH5ZmN8l_r1qcwff7butQqX6WLI7uZhy9b6F8GYuYUUVzeNtey-JbheHvI8eJE10ocAeNA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "usd",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 10
+   }
+  },
+  {
+   "id": "recipient-mismatch",
+   "description": "An allow for vendor:acme_saas against a payment to vendor:acme_saas_eu.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzMyNWExNTA1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNmE2NjQ2M2MyNDg0NTdlOCIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.qfnu7Nc-PNQGDepUxqN-d5mdpwzOK9_VDdjYdnryYwFEv2LPg-H8g3OqHjggD1cnDR-6kkMOK4k4mQf-WD8auw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas_eu"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 11
+   }
+  },
+  {
+   "id": "recipient-normalization",
+   "description": "The token's recipient is in NFC, the payment record's in NFD; no normalization.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2ViMzU3NWRhIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fY2FhNDAyODk0NzAxZTgwYSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6Y2Fmw6kiLCJjYXRlZ29yeSI6InNhYXMifX0.d1siKJ8N1TbNIFpL3fUFQv0KQPK_PsO7W0J15r0Ab4c8lLngsc7Fsy4fMIy6QdZXaibbJSn5d5uqh5CnJMxU2g",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "USD",
+    "recipient": "vendor:café"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 11
+   }
+  },
+  {
+   "id": "recipient-trailing-space",
+   "description": "The payment record's recipient has a trailing space.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzg2ZDgzYjI5IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMzQwN2U1YjE3M2QyZDIyYSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.s71QXEhVbqmCqIpG1vwzoAid2ms00PiWpsML0Z9PJ5eiWprlVS5Aj5e0J9Ew4B5TFTSgGyr1EUkwisQhWz5tEA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas "
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 11
+   }
+  },
+  {
+   "id": "recipient-zero-width",
+   "description": "The token's recipient contains a zero-width space.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzRlZGFhZGQ1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMDlmYmIwMTc5ODVhODEyNyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZeKAi19zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.aqm53pyTXVcN6lALdx-Y_d5RuSC9DuTyCUJFKYVCuoYat9xIaqfDhjrSpc16WTH6AdJGWPqg4Qyazu25DQYuzw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 11
+   }
+  },
+  {
+   "id": "recipient-case",
+   "description": "The payment record's recipient differs only in case.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzBlYzMzNGYwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fY2Q5MDA4NzJhZDQ5YzVmZiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.6tZ-fq8o7DvGXnkgPuCA_D2hX69Z07Tc1sDSg1YtLuq0RlaW_8HqDAe6wB-mPw1dCm6cZnP1E1ldmStR-pXyXg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340",
+    "currency": "USD",
+    "recipient": "Vendor:Acme_SaaS"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 11
+   }
+  },
+  {
+   "id": "replayed-nonce",
+   "description": "The token was accepted before: its pair of iss and nonce (and of iss and jti) is already in the store.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2Q2YTdiM2FiIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fM2ZlYTBlNjg1NDkwZDEyMyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.sOSoGrvP5VFlHPKczZ9wVIAToSLyJx5Gsipm_fZAkIX8Qbil0qQnMhWhmdHSBUj0_pI5TshAVgoMwXOUJ4NbKA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [
+    [
+     "https://issuer.example",
+     "n_3fea0e685490d123"
+    ]
+   ],
+   "seenJtis": [
+    [
+     "https://issuer.example",
+     "dec_d6a7b3ab"
+    ]
+   ],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 12
+   }
+  },
+  {
+   "id": "low-s-twin-replay",
+   "description": "The low-S twin of the Appendix A token, after the Appendix A token was accepted. The replay key is a claim value, not the token string.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzViMmU5YzQxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fOWQwMmM2ZTQxYTdmM2I4NSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.5NLM85wfRPdBIBaW_fY_gmgfml5w-0KZlVbDj0YUVxZLIPdmZVolZw0NY4AtA8rbKX37kHbx-83g2vjlR4c08Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [
+    [
+     "https://issuer.example",
+     "n_9d02c6e41a7f3b85"
+    ]
+   ],
+   "seenJtis": [
+    [
+     "https://issuer.example",
+     "dec_5b2e9c41"
+    ]
+   ],
+   "seenSupersedes": [],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 12
+   }
+  },
+  {
+   "id": "replayed-supersedes",
+   "description": "A second allow for the same review: its supersedes value was already accepted (Section 10.12).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzJiYjdkNzFlIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYmI2N2Q1ZTE5NzQyMTQxYyIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn0sInN1cGVyc2VkZXMiOiJkZWNfOTllMmZlNGEifQ.adUORucKHCz_xqP3nybGHe5nXkXMSJtXg8_9nWRWdyPTdAj7Hgg3RVkYnBJC_pLCT6T0Zv9bvn6oBfrC4egfPw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1791374520,
+   "mode": "settle",
+   "payment": {
+    "amount": "340.00",
+    "currency": "USD",
+    "recipient": "vendor:acme_saas"
+   },
+   "agreedMandates": [
+    "mnd_7f3a0d12"
+   ],
+   "seenNonces": [],
+   "seenJtis": [],
+   "seenSupersedes": [
+    [
+     "https://issuer.example",
+     "dec_99e2fe4a"
+    ]
+   ],
+   "testingOnly": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 12,
+    "note": "Rests on Section 10.12, a SHOULD: a verifier that does not apply it accepts this token, whose own nonce and jti are new."
+   }
+  },
+  {
+   "id": "record-refusal",
+   "description": "A deny_limit verdict checked as a record, with the time it was received.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzU4YzU3N2QzIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJkZW55X2xpbWl0IiwibWFuZGF0ZSI6Im1uZF83ZjNhMGQxMiIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl8xMjlkNDE3ZmE5ZDIwOTJjIiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.kNZa3oz6LilYdCBmukc47bT_ggDUMQkUIiS-2NW53SOPRm45x6iqeGJa55Mm1MtGBq7fcEGEol0FsyudEb_fhQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "record-allow-expired-later",
+   "description": "An allow checked as a record a month later; it was received while valid.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzIwMjM2OGFmIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZDA2MjkzZDhkOTU4YmFlOSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.km0BEm4Zqq80HQdLSn1fDGVeh0ufZSkFq57JV_e_d1GZX3w8Fo-wQX7mZXfhP8pTa3cqfGbFxGeusrB_dEtJ4g",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374402,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "record-no-receipt-time",
+   "description": "A deny_no_mandate verdict checked as a record with no recorded receipt time: step 7 is not applied.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzBlYWMwZjYzIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJkZW55X25vX21hbmRhdGUiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMGM0NTRmY2M4NDY3ODhmYiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.ap2ZFZhbJ24fR0UYu5NkK6QKB0uglQwY_n6A2IEDAZ8qd6g7frf2lmTbbn2demR5k78jC1pr56Xsm_NVmuon4Q",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": null,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "record-received-late",
+   "description": "An allow checked as a record; it was received at exp + 60 s.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2UzNTA4Y2RiIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fY2VhNTVlMzk3MzViYjYyYiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.NhuVxrRSqsYj6Cc57ZVadbfsS3IzvfFC6T9JqIo9SxyKcf4fjDtNP0DEHzd_0FPSy38xdQeZVkLqob1_I1xSNg",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374760,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 7
+   }
+  },
+  {
+   "id": "record-key-not-in-copy",
+   "description": "A stored key-set copy that lacks example-1. No refetch for stored verdicts.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2RmYjlkODQ3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZmU5NmEyNmVhMDUyMDdhNiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.zaMdXPNwv36Uo7jNRSbuZWQL3xruXMnhfNAN-HO4Vxu-oTFvfcQdxUXfEb9j58VDeEvNI7Z5cuqlf-7NlGHrgQ",
+   "issuers": {
+    "https://issuer.example": "issuer-stored-copy-without-example-1"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "refetchWouldReturn": "issuer",
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 4
+   }
+  },
+  {
+   "id": "record-tampered",
+   "description": "A deny_limit record whose verdict was changed to allow after signing.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzAyMjAyMmU1IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZDkyZjA1NjVkZWQwMGIzNiIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.AyGYW7ztBMnB8KHFVuBtrENdfl4fAx_U4u8Xc8ux8GIvNJCV2qojLKdZD1dhBMnWScv21aFk8GIS-RYugxM0Ow",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 5
+   }
+  },
+  {
+   "id": "record-test-verdict",
+   "description": "A test-environment verdict checked by a party that distinguishes test verdicts.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNhbmRib3gtZXhhbXBsZS0xIn0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2E1ZmJjYzc3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fMzI2MDQ5ZjMwMmRlZWNkOSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.iEKpm8il2vzEqs7_vUcK2g70rF3TY3ne2EGNT315yL__PbXiKVVe7vOJVw631x_0_UaaBKsksmc2EeeyDlipug",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": true,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 3
+   }
+  },
+  {
+   "id": "record-test-verdict-not-distinguished",
+   "description": "The same kind of test-environment verdict, checked as a record by a party that does not separate test verdicts (Section 6.2 applies step 3 only if it needs to).",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNhbmRib3gtZXhhbXBsZS0xIn0.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2UxZDhlMTc3IiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fYmY1Y2FmNWIzMDJhY2YyOSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.l9PJDH1QDCq0JfNXkmN_Ro65TgCX6LpwC0rGfsRT7zKpa8Vq-FCk29qBBsCLnkOXkoOXUw4kcI0mfYaUa8Vsug",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": true,
+    "step": null
+   }
+  },
+  {
+   "id": "record-allow-without-mandate",
+   "description": "Checked as a record: an allow with no mandate claim. Step 8 does not apply to records, so only step 6 catches it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzIyMGYwMWFkIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsInBvbGljeV92ZXJzaW9uIjoicG9sXzIwMjYtMDktMDIuMSIsIm5vbmNlIjoibl84NTk0MDZkMjA0OTE5ZTJiIiwicmVxdWVzdCI6eyJhZ2VudCI6ImFndF9wcm9jdXJlbWVudF8wMSIsImFtb3VudCI6MzQwLCJjdXJyZW5jeSI6IlVTRCIsInJlY2lwaWVudCI6InZlbmRvcjphY21lX3NhYXMiLCJjYXRlZ29yeSI6InNhYXMifX0.cDPRBd4QMV3i56O96aQRSUT_YGFxxSotIdR7qi0-X0r8-imFRyByaHG3T_9glgbZxA9ikMTdAEK5HNKLj96GTQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "record-mandate-empty",
+   "description": "Checked as a record: an allow whose mandate is the empty string. Step 8 does not apply to records, so only step 6 catches it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzllY2EzNzYxIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJhbGxvdyIsIm1hbmRhdGUiOiIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fZmRlZTc3MTgxYmZjZGFmOSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.OqxBlLEduCGx7FPlW5oDw14QLFxTMy19lF321LKQ9yynCUaxMp1_9QH1SzVWW6cofuDc3egS285dsdcIUqsJYw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "record-supersedes-on-review",
+   "description": "Checked as a record: a review verdict that carries supersedes. Step 8 does not apply to records, so only step 6 catches it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzQ1M2VmZDkyIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiJyZXZpZXciLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuX2Q4NzZkN2ZkNzE0MWRjMDYiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9LCJzdXBlcnNlZGVzIjoiZGVjX2QzODZhZDkwIn0.sj9aeEKPCIDTnp18CDYwpKLfXR2aX5ZGs4b3xudx6jwphfE029d76zaDkKDwnslF_SyARZYGR71hMfaU5IbfQA",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "record-verdict-missing",
+   "description": "Checked as a record: a token with no verdict claim. Step 8 does not apply to records, so only step 6 catches it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjXzRhOWI5ZTVmIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsIm1hbmRhdGUiOiJtbmRfN2YzYTBkMTIiLCJwb2xpY3lfdmVyc2lvbiI6InBvbF8yMDI2LTA5LTAyLjEiLCJub25jZSI6Im5fNzk0NWZkMTc4MzdjZWE1MSIsInJlcXVlc3QiOnsiYWdlbnQiOiJhZ3RfcHJvY3VyZW1lbnRfMDEiLCJhbW91bnQiOjM0MCwiY3VycmVuY3kiOiJVU0QiLCJyZWNpcGllbnQiOiJ2ZW5kb3I6YWNtZV9zYWFzIiwiY2F0ZWdvcnkiOiJzYWFzIn19.mFOrwuU1BMmjmZeISH8dIp5MdVhhFf4rOW8b3P2_5c-VFleaGe8UtU_s2fCna4iTNO0aUU4P6FSJi16KyakEzQ",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  },
+  {
+   "id": "record-verdict-empty",
+   "description": "Checked as a record: a token whose verdict is the empty string. Step 8 does not apply to records, so only step 6 catches it.",
+   "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlIiwianRpIjoiZGVjX2FkYjE3Y2IwIiwiaWF0IjoxNzkxMzc0NDAwLCJleHAiOjE3OTEzNzQ3MDAsInZlcmRpY3QiOiIiLCJtYW5kYXRlIjoibW5kXzdmM2EwZDEyIiwicG9saWN5X3ZlcnNpb24iOiJwb2xfMjAyNi0wOS0wMi4xIiwibm9uY2UiOiJuX2ZmZGZkMzVkNDM2YzI3NjUiLCJyZXF1ZXN0Ijp7ImFnZW50IjoiYWd0X3Byb2N1cmVtZW50XzAxIiwiYW1vdW50IjozNDAsImN1cnJlbmN5IjoiVVNEIiwicmVjaXBpZW50IjoidmVuZG9yOmFjbWVfc2FhcyIsImNhdGVnb3J5Ijoic2FhcyJ9fQ.0nyxtA5DIka35kHlFOobhLhWGJpbQpFF-mAtZt_m-hLdkO7jR7FV3l4V0PBBNdCmCJ_45mwDcfyK8H9HNowbtw",
+   "issuers": {
+    "https://issuer.example": "issuer"
+   },
+   "now": 1793966400,
+   "mode": "record",
+   "receivedAt": 1791374401,
+   "distinguishTest": false,
+   "audience": null,
+   "expected": {
+    "valid": false,
+    "step": 6
+   }
+  }
+ ]
+}
