@@ -9,6 +9,9 @@ dependencies = [
     "uvicorn",
     "httpx",
     "pyjwt[crypto]",
+    "langchain>=1.4.7",
+    "langgraph>=1.2.18",
+    "langchain-anthropic>=1.7.6",
 ]
 
 [dependency-groups]
