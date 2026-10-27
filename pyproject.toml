@@ -12,6 +12,7 @@ dependencies = [
     "langchain>=1.4.7",
     "langgraph>=1.2.18",
     "langchain-anthropic>=1.7.6",
+    "mcp>=2.3.0",
 ]
 
 [dependency-groups]

@@ -364,6 +364,17 @@ def deny_review(review_id: str):
     return {k: r[k] for k in ("review", "waits_for", "expires_at", "status")}
 
 
+@app.get("/v1/decisions")
+def list_decisions(request: Request, agent: str | None = None, mandate: str | None = None,
+                   verdict: str | None = None, mode: str | None = None):
+    own = request.state.agent  # an agent key reads only its own decisions
+    filters = {"mandate": mandate, "verdict": verdict, "mode": mode}
+    data = [d for d in reversed(decisions.values())  # newest first
+            if own in (None, d["request"]["agent"]) and agent in (None, d["request"]["agent"])
+            and all(want is None or d.get(name) == want for name, want in filters.items())]
+    return {"data": data, "has_more": False}  # ponytail: one page; add cursors if a test ever needs 100+ decisions
+
+
 @app.get("/v1/decisions/{decision_id}")
 def get_decision(decision_id: str, request: Request):
     d = decisions.get(decision_id)
