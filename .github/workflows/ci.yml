@@ -1,0 +1,24 @@
+name: ci
+
+# Every push to main and every pull request: the unit tests, with the locked dependencies.
+# No secret and no model call: the tests run against the local mock of the API.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - run: pipx install uv==0.13.5
+      - run: uv run --locked pytest -q
